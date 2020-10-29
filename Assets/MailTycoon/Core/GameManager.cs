@@ -17,11 +17,21 @@ public class GameManager : MonoBehaviour {
 
     void Update () {
         if (toMove) {
+            Terminal closesTerminal = null;
+            float shortestDistance = 1000f;
+            foreach (var terminal in selectedArea.terminals) {
+                float distance = (terminal.transform.position - toMove.transform.position).sqrMagnitude;
+                if (distance < shortestDistance) {
+                    closesTerminal = terminal;
+                    shortestDistance = distance;
+
+                }
+            }
             Vector3 mouse = Input.mousePosition;
             Ray castPoint = Camera.main.ScreenPointToRay (mouse);
             RaycastHit hit;
-            if (selectedArea) {
-                selectedArea.CreatePostRoutes ();
+            if (closesTerminal) {
+                closesTerminal.CreatePostRoutes ();
             }
             if (Physics.Raycast (castPoint, out hit, Mathf.Infinity)) {
                 toMove.transform.position = new Vector3 (hit.point.x, hit.point.y, -1f);

@@ -89,6 +89,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     }
     public void CreatePostRoutes () {
+        Debug.Log ("being fired");
         foreach (var household in Households) {
             float shortestDistance = 1000f;
 
@@ -96,12 +97,13 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
                 float distance = ((household.transform.position - postman.MapDivisionPosition.position).sqrMagnitude);
 
                 if (distance < shortestDistance) {
-                    household.AssignHouseholdToPostman (postman);
+                    household.Assign (postman);
                     shortestDistance = distance;
                 }
             }
         }
     }
+
     public void HandleMailPickup (Mail mail, Postman postman) {
 
         if (mail == postman.MailToPickUp) {

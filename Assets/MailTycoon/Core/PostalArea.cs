@@ -10,7 +10,7 @@ public class PostalArea : MonoBehaviour {
     [SerializeField] Sprite household1, household2, household3;
     // [SerializeField] int targetInhabitants;
     List<Mail> mailToBePickedUp;
-    List<Terminal> terminals;
+    public List<Terminal> terminals;
     Dictionary<Postman, List<Household>> routes;
     List<Postman> postmen;
 
@@ -120,19 +120,19 @@ public class PostalArea : MonoBehaviour {
                 break;
             }
         }
-        CreatePostRoutes ();
+        AssignHouseholdsToTerminals ();
     }
 
-    public void CreatePostRoutes () {
+    public void AssignHouseholdsToTerminals () {
 
         foreach (var household in households) {
             float shortestDistance = 1000f;
 
-            foreach (var postman in postmen) {
-                float distance = ((household.transform.position - postman.MapDivisionPosition.position).sqrMagnitude);
+            foreach (var terminal in terminals) {
+                float distance = ((household.transform.position - terminal.transform.position).sqrMagnitude);
 
                 if (distance < shortestDistance) {
-                    household.AssignHouseholdToPostman (postman);
+                    household.Assign (terminal);
                     shortestDistance = distance;
                 }
             }

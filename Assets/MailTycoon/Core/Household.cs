@@ -10,6 +10,7 @@ public class Household : MonoBehaviour {
     [HideInInspector] public Color HouseColor;
     [HideInInspector] public List<Mail> mailToSend;
     public Postman AssignedPostman;
+    public Terminal AssignedTerminal;
     public int Inhabitants, PropertyValue;
 
     private void OnEnable () {
@@ -34,7 +35,7 @@ public class Household : MonoBehaviour {
             SpawnMail ();
         }
     }
-    public void AssignHouseholdToPostman (Postman postman) {
+    public void Assign (Postman postman) {
 
         if (AssignedPostman != null) {
             AssignedPostman.AssignedHouses.Remove (this);
@@ -42,5 +43,13 @@ public class Household : MonoBehaviour {
         }
         AssignedPostman = postman;
         postman.AssignedHouses.Add (this);
+    }
+
+    public void Assign (Terminal terminal) {
+        if (AssignedTerminal != null) {
+            AssignedTerminal.Households.Remove (this);
+        }
+        AssignedTerminal = terminal;
+        terminal.Households.Add (this);
     }
 }
