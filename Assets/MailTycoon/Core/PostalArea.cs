@@ -105,7 +105,7 @@ public class PostalArea : MonoBehaviour {
             if (household.Inhabitants == 0) {
                 Terminal terminal = Instantiate (GameManager.instance.postOfficePrefab, household.transform.position, Quaternion.identity).GetComponent<Terminal> ();
                 households.Remove (household);
-                Destroy (household.gameObject);
+                household.gameObject.SetActive (false);
                 terminal.Postmen = new List<Postman> (postmen);
                 foreach (var postman in postmen) {
                     postman.AssignedTerminal = terminal;

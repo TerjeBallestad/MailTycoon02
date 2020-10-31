@@ -3,7 +3,7 @@ using UnityEngine;
 
 public interface IMouseInteractable {
     void OnHover ();
-    void OnClick ();
+    void OnClickStart ();
     void OnClickHold ();
     void OnClickEnd ();
     void OnMouseHoverExit ();

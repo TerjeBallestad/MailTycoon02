@@ -23,7 +23,7 @@ public class MapIndicator : MonoBehaviour, IMouseInteractable {
     public void OnHover () {
 
     }
-    public void OnClick () {
+    public void OnClickStart () {
         GameManager.instance.toMove = gameObject;
     }
     public void OnClickHold () {

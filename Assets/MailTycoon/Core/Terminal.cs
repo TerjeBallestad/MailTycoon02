@@ -40,7 +40,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     public void OnHover () {
 
     }
-    public void OnClick () {
+    public void OnClickStart () {
 
         if (showRoutes) {
             ShowPostalRouteVisual ();

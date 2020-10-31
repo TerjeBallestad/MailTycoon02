@@ -10,9 +10,8 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public PostalArea selectedArea;
     [HideInInspector] public IMouseInteractable mouseInteractable;
     [HideInInspector] public event Action SpawnPostman;
-
+    [HideInInspector] public GameObject toMove;
     public List<Color> MediumColors, LightColors;
-    public GameObject toMove;
 
     private void Awake () {
         instance = this;
@@ -41,22 +40,16 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        if (!IsPointerOverUIElement ()) {
+        if (!IsPointerOverUIElement () && mouseInteractable != null) {
             if (Input.GetMouseButtonDown (0)) {
-                if (mouseInteractable != null) {
-                    mouseInteractable.OnClick ();
-                }
+                mouseInteractable.OnClickStart ();
             }
             if (Input.GetMouseButtonUp (0)) {
                 toMove = null;
-                if (mouseInteractable != null) {
-                    mouseInteractable.OnClickEnd ();
-                }
+                mouseInteractable.OnClickEnd ();
             }
             if (Input.GetMouseButton (0)) {
-                if (mouseInteractable != null) {
-                    mouseInteractable.OnClickHold ();
-                }
+                mouseInteractable.OnClickHold ();
             }
         }
     }
