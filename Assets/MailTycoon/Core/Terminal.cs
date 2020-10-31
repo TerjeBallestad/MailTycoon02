@@ -8,12 +8,13 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     [HideInInspector] public List<Postman> Postmen;
     [HideInInspector] public List<Household> Households;
     [HideInInspector] public List<Mail> MailInTerminal;
+    [HideInInspector] public Dictionary<Postman, List<Household>> Routes;
     [HideInInspector] public Dictionary<Postman, List<Mail>> MailToBePickedUp;
     [HideInInspector] public PostalArea Area;
     [HideInInspector] public event Action<IMouseInteractable> OnMouseStartHover;
     [HideInInspector] public event Action OnMouseEndHover;
     bool updateRoutes = false;
-    bool clicked = true;
+    bool showRoutes = true;
 
     private void Start () {
         OnMouseStartHover += GameManager.instance.HandleMouseOverStart;
@@ -22,7 +23,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     private void Update () {
         if (updateRoutes)
-            UpdatePostalRoutes ();
+            UpdatePostalRoutesVisual ();
     }
 
     private void OnMouseEnter () {
@@ -40,12 +41,13 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     }
     public void OnClick () {
-        if (clicked) {
-            ShowPostalRoutes ();
-            clicked = !clicked;
+
+        if (showRoutes) {
+            ShowPostalRouteVisual ();
+            showRoutes = !showRoutes;
         } else {
-            DontShowPostalRoutes ();
-            clicked = !clicked;
+            DontShowPostalRouteVisual ();
+            showRoutes = !showRoutes;
         }
 
     }
@@ -59,7 +61,8 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     }
 
-    public void ShowPostalRoutes () {
+    public void ShowPostalRouteVisual () {
+
         foreach (var postman in Postmen) {
             postman.MapDivisionPosition.gameObject.SetActive (true);
             foreach (var household in postman.AssignedHouses) {
@@ -69,7 +72,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         updateRoutes = true;
     }
 
-    void UpdatePostalRoutes () {
+    void UpdatePostalRoutesVisual () {
         foreach (var postman in Postmen) {
             foreach (var household in postman.AssignedHouses) {
                 household.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[Postmen.IndexOf (postman) % GameManager.instance.LightColors.Count];
@@ -78,7 +81,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     }
 
-    public void DontShowPostalRoutes () {
+    public void DontShowPostalRouteVisual () {
         updateRoutes = false;
         foreach (var postman in Postmen) {
             postman.MapDivisionPosition.gameObject.SetActive (false);
@@ -88,8 +91,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         }
 
     }
-    public void CreatePostRoutes () {
-        Debug.Log ("being fired");
+    public void AssignHousesToPostmen () {
         foreach (var household in Households) {
             float shortestDistance = 1000f;
 
@@ -102,6 +104,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
                 }
             }
         }
+        ShowPostalRouteVisual ();
     }
 
     public void HandleMailPickup (Mail mail, Postman postman) {
@@ -158,7 +161,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     void HandleMailSpawn (Household house) {
         Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
         MailToBePickedUp[house.AssignedPostman].Add (mail);
-        mail.Area = Area;
+        mail.SenderArea = Area;
         house.mailToSend.Add (mail);
         Household recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
         while (recipientHouse.Inhabitants == 0) {

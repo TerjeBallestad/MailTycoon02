@@ -3,9 +3,10 @@ using UnityEngine;
 
 public class Mail : MonoBehaviour {
 
+    [HideInInspector] public Household Sender;
     [HideInInspector] public Household Recipient;
     [HideInInspector] public PostalArea RecipientArea;
-    [HideInInspector] public PostalArea Area;
+    [HideInInspector] public PostalArea SenderArea;
     [HideInInspector] public Postman AssignedPostman;
     [HideInInspector] public event Action<Mail, Postman> OnMailNotDeliveredInTime;
     [HideInInspector] public bool PickedUp = false;

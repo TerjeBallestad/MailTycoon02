@@ -11,7 +11,6 @@ public class PostalArea : MonoBehaviour {
     // [SerializeField] int targetInhabitants;
     List<Mail> mailToBePickedUp;
     public List<Terminal> terminals;
-    Dictionary<Postman, List<Household>> routes;
     List<Postman> postmen;
 
     List<Household> households;
@@ -23,8 +22,8 @@ public class PostalArea : MonoBehaviour {
         mailToBePickedUp = new List<Mail> ();
         postmen = new List<Postman> ();
         collider = GetComponent<Collider> ();
-        routes = new Dictionary<Postman, List<Household>> ();
         GameManager.instance.selectedArea = this;
+        GameManager.instance.SpawnPostman += SpawnPostman;
 
         SpawnHouseholds ();
         for (int i = 0; i < 5; i++) {
@@ -77,8 +76,7 @@ public class PostalArea : MonoBehaviour {
         }
     }
 
-    public int SpawnPostman () {
-
+    public void SpawnPostman () {
         Household randomHouse = households.ElementAt (Random.Range (0, households.Count));
         Postman postman = Instantiate (GameManager.instance.postmanPrefab, randomHouse.transform.position, Quaternion.identity).GetComponent<Postman> ();
         MapIndicator PostmanMapDivisionObject = Instantiate (GameManager.instance.mapIndicatorPrefab, new Vector3 (randomHouse.transform.position.x, randomHouse.transform.position.y, -1f), Quaternion.identity).GetComponent<MapIndicator> ();
@@ -91,7 +89,6 @@ public class PostalArea : MonoBehaviour {
         postman.OnMailPickup += HandleMailPickup;
         postman.OnMailDelivered += HandleMailDelivery;
         postman.StartCoroutine ("WaitForAssignment");
-        return postmen.Count;
     }
 
     public int DespawnPostman () {
@@ -114,6 +111,8 @@ public class PostalArea : MonoBehaviour {
                     postman.AssignedTerminal = terminal;
                     postman.OnMailPickup -= HandleMailPickup;
                     postman.OnMailPickup += terminal.HandleMailPickup;
+                    postman.OnMailDelivered -= HandleMailDelivery;
+                    postman.OnMailDelivered += terminal.HandleMailDelivery;
                 }
                 terminal.Area = this;
                 terminals.Add (terminal);
@@ -188,7 +187,7 @@ public class PostalArea : MonoBehaviour {
 
         Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
         mailToBePickedUp.Add (mail);
-        mail.Area = this;
+        mail.SenderArea = this;
         house.mailToSend.Add (mail);
         Household recipientHouse = households.ElementAt (Random.Range (0, households.Count));
         while (recipientHouse.Inhabitants == 0) {

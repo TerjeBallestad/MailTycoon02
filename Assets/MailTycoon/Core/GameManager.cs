@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public static GameManager instance;
     [HideInInspector] public PostalArea selectedArea;
     [HideInInspector] public IMouseInteractable mouseInteractable;
+    [HideInInspector] public event Action SpawnPostman;
+
     public List<Color> MediumColors, LightColors;
     public GameObject toMove;
 
@@ -31,7 +34,7 @@ public class GameManager : MonoBehaviour {
             Ray castPoint = Camera.main.ScreenPointToRay (mouse);
             RaycastHit hit;
             if (closesTerminal) {
-                closesTerminal.CreatePostRoutes ();
+                closesTerminal.AssignHousesToPostmen ();
             }
             if (Physics.Raycast (castPoint, out hit, Mathf.Infinity)) {
                 toMove.transform.position = new Vector3 (hit.point.x, hit.point.y, -1f);
@@ -46,7 +49,9 @@ public class GameManager : MonoBehaviour {
             }
             if (Input.GetMouseButtonUp (0)) {
                 toMove = null;
-
+                if (mouseInteractable != null) {
+                    mouseInteractable.OnClickEnd ();
+                }
             }
             if (Input.GetMouseButton (0)) {
                 if (mouseInteractable != null) {
@@ -54,6 +59,9 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
+    }
+    public void HandleSpawnPostman () {
+        SpawnPostman?.Invoke ();
     }
 
     public void HandleMouseOverEnd () {
