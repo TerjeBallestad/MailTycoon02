@@ -5,9 +5,10 @@ using System.Linq;
 using UnityEngine;
 
 public class Terminal : MonoBehaviour, IMouseInteractable {
+    [HideInInspector] public Household HouseholdAtLot;
     [HideInInspector] public List<Postman> Postmen;
     [HideInInspector] public List<Household> Households;
-    [HideInInspector] public List<Mail> MailInTerminal;
+    public List<Mail> MailInTerminal;
     [HideInInspector] public Dictionary<Postman, List<Household>> Routes;
     [HideInInspector] public Dictionary<Postman, List<Mail>> MailToBePickedUp;
     [HideInInspector] public PostalArea Area;
@@ -64,7 +65,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     public void ShowPostalRouteVisual () {
 
         foreach (var postman in Postmen) {
-            postman.MapDivisionPosition.gameObject.SetActive (true);
+            postman.MapIndicator.gameObject.SetActive (true);
             foreach (var household in postman.AssignedHouses) {
                 household.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[Postmen.IndexOf (postman) % GameManager.instance.LightColors.Count];
             }
@@ -84,19 +85,19 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     public void DontShowPostalRouteVisual () {
         updateRoutes = false;
         foreach (var postman in Postmen) {
-            postman.MapDivisionPosition.gameObject.SetActive (false);
+            postman.MapIndicator.gameObject.SetActive (false);
             foreach (var household in postman.AssignedHouses) {
                 household.ResetToDefaultColor ();
             }
         }
 
     }
-    public void AssignHousesToPostmen () {
+    public void UpdatePostalRoutes () {
         foreach (var household in Households) {
             float shortestDistance = 1000f;
 
             foreach (var postman in Postmen) {
-                float distance = ((household.transform.position - postman.MapDivisionPosition.position).sqrMagnitude);
+                float distance = ((household.transform.position - postman.MapIndicator.transform.position).sqrMagnitude);
 
                 if (distance < shortestDistance) {
                     household.Assign (postman);
@@ -185,12 +186,12 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     public List<Mail> GetMailToPickUp (Postman postman) {
         List<Mail> mail = new List<Mail> ();
 
-        foreach (var house in Households) {
-            if (house.AssignedPostman == postman) {
-                mail.AddRange (house.mailToSend);
-                house.mailToSend.Clear ();
-            }
+        foreach (var house in postman.AssignedHouses) {
+
+            mail.AddRange (house.mailToSend);
+            house.mailToSend.Clear ();
         }
+
         return mail;
     }
     void AssignPickupToPostman (Mail mail, Postman postman) {

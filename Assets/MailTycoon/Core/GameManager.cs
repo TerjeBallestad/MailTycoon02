@@ -9,8 +9,8 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public static GameManager instance;
     [HideInInspector] public PostalArea selectedArea;
     [HideInInspector] public IMouseInteractable mouseInteractable;
-    [HideInInspector] public event Action SpawnPostman;
-    [HideInInspector] public GameObject toMove;
+    [HideInInspector] public event Action ShowAdjustmentLayer, DontShowAdjustmentLayer;
+    [HideInInspector] public MapIndicator MovingIdicator;
     public List<Color> MediumColors, LightColors;
 
     private void Awake () {
@@ -18,26 +18,18 @@ public class GameManager : MonoBehaviour {
     }
 
     void Update () {
-        if (toMove) {
-            Terminal closesTerminal = null;
-            float shortestDistance = 1000f;
-            foreach (var terminal in selectedArea.terminals) {
-                float distance = (terminal.transform.position - toMove.transform.position).sqrMagnitude;
-                if (distance < shortestDistance) {
-                    closesTerminal = terminal;
-                    shortestDistance = distance;
-
-                }
-            }
+        if (MovingIdicator) {
+            Terminal closesTerminal = MovingIdicator.GetClosestHousehold ().AssignedTerminal;
             Vector3 mouse = Input.mousePosition;
             Ray castPoint = Camera.main.ScreenPointToRay (mouse);
             RaycastHit hit;
-            if (closesTerminal) {
-                closesTerminal.AssignHousesToPostmen ();
-            }
+            // if (closesTerminal) {
+            //     closesTerminal.AssignHousesToPostmen ();
+            // }
             if (Physics.Raycast (castPoint, out hit, Mathf.Infinity)) {
-                toMove.transform.position = new Vector3 (hit.point.x, hit.point.y, -1f);
+                MovingIdicator.transform.position = new Vector3 (hit.point.x, hit.point.y, -1f);
             }
+            selectedArea.ShowPostalRoutes (MovingIdicator);
         }
 
         if (!IsPointerOverUIElement () && mouseInteractable != null) {
@@ -45,16 +37,13 @@ public class GameManager : MonoBehaviour {
                 mouseInteractable.OnClickStart ();
             }
             if (Input.GetMouseButtonUp (0)) {
-                toMove = null;
+                MovingIdicator = null;
                 mouseInteractable.OnClickEnd ();
             }
             if (Input.GetMouseButton (0)) {
                 mouseInteractable.OnClickHold ();
             }
         }
-    }
-    public void HandleSpawnPostman () {
-        SpawnPostman?.Invoke ();
     }
 
     public void HandleMouseOverEnd () {
@@ -71,5 +60,15 @@ public class GameManager : MonoBehaviour {
         var results = new List<RaycastResult> ();
         EventSystem.current.RaycastAll (eventData, results);
         return results.Count > 0;
+    }
+
+    public void ToggleAdjustmentLayer (bool show) {
+        if (show) {
+            Debug.Log ("enabled");
+            ShowAdjustmentLayer?.Invoke ();
+        } else {
+            DontShowAdjustmentLayer?.Invoke ();
+            Debug.Log ("disabled");
+        }
     }
 }

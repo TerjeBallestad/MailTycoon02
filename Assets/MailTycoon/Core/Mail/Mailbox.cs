@@ -2,17 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Mailbox : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+public class Mailbox : MonoBehaviour {
+    [HideInInspector] public List<Household> Households;
+    [HideInInspector] public List<Mail> Mail;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

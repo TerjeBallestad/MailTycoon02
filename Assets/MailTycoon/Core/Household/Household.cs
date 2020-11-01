@@ -11,6 +11,7 @@ public class Household : MonoBehaviour {
     [HideInInspector] public List<Mail> mailToSend;
     public Postman AssignedPostman;
     public Terminal AssignedTerminal;
+    public Mailbox AssignedMailbox;
     public int Inhabitants, PropertyValue;
 
     private void OnEnable () {
@@ -51,5 +52,12 @@ public class Household : MonoBehaviour {
         }
         AssignedTerminal = terminal;
         terminal.Households.Add (this);
+    }
+    public void Assign (Mailbox mailbox) {
+        if (AssignedMailbox != null) {
+            AssignedMailbox.Households.Remove (this);
+        }
+        AssignedMailbox = mailbox;
+
     }
 }

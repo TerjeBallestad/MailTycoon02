@@ -24,7 +24,7 @@ public class MapIndicator : MonoBehaviour, IMouseInteractable {
 
     }
     public void OnClickStart () {
-        GameManager.instance.toMove = gameObject;
+        GameManager.instance.MovingIdicator = this;
     }
     public void OnClickHold () {
 
@@ -37,4 +37,20 @@ public class MapIndicator : MonoBehaviour, IMouseInteractable {
 
     }
 
+    public Household GetClosestHousehold () {
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll (transform.position, 1f);
+        float shortestDistance = 1000f;
+        Household nearestHouse = null;
+        foreach (var collider in hitColliders) {
+            Household household = collider.GetComponent<Household> ();
+            if (household) {
+                float distance = (household.transform.position - transform.position).sqrMagnitude;
+                if (distance < shortestDistance) {
+                    nearestHouse = household;
+                    shortestDistance = distance;
+                }
+            }
+        }
+        return nearestHouse;
+    }
 }

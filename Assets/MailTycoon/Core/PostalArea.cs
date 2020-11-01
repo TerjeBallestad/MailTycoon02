@@ -23,14 +23,18 @@ public class PostalArea : MonoBehaviour {
         postmen = new List<Postman> ();
         collider = GetComponent<Collider> ();
         GameManager.instance.selectedArea = this;
-        GameManager.instance.SpawnPostman += SpawnPostman;
 
         SpawnHouseholds ();
         for (int i = 0; i < 5; i++) {
 
             SpawnPostman ();
         }
-        SpawnPostalOffice ();
+
+        for (int i = 0; i < 2; i++) {
+            Household randomHouse = households.ElementAt (Random.Range (0, households.Count));
+            SpawnTerminal (randomHouse);
+        }
+
     }
 
     void SpawnHouseholds () {
@@ -79,10 +83,10 @@ public class PostalArea : MonoBehaviour {
     public void SpawnPostman () {
         Household randomHouse = households.ElementAt (Random.Range (0, households.Count));
         Postman postman = Instantiate (GameManager.instance.postmanPrefab, randomHouse.transform.position, Quaternion.identity).GetComponent<Postman> ();
-        MapIndicator PostmanMapDivisionObject = Instantiate (GameManager.instance.mapIndicatorPrefab, new Vector3 (randomHouse.transform.position.x, randomHouse.transform.position.y, -1f), Quaternion.identity).GetComponent<MapIndicator> ();
-        PostmanMapDivisionObject.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[postmen.Count];
-        postman.MapDivisionPosition = PostmanMapDivisionObject.transform;
-        PostmanMapDivisionObject.gameObject.SetActive (false);
+        MapIndicator mapIndicator = Instantiate (GameManager.instance.mapIndicatorPrefab, new Vector3 (randomHouse.transform.position.x, randomHouse.transform.position.y, -1f), Quaternion.identity).GetComponent<MapIndicator> ();
+        mapIndicator.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[postmen.Count];
+        postman.MapIndicator = mapIndicator;
+        mapIndicator.gameObject.SetActive (false);
         postmen.Add (postman);
         postman.postalArea = this;
         postman.gameObject.name = this.name + " postman";
@@ -100,36 +104,39 @@ public class PostalArea : MonoBehaviour {
         return postmen.Count;
     }
 
-    void SpawnPostalOffice () {
-        foreach (var household in households) {
-            if (household.Inhabitants == 0) {
-                Terminal terminal = Instantiate (GameManager.instance.postOfficePrefab, household.transform.position, Quaternion.identity).GetComponent<Terminal> ();
-                households.Remove (household);
-                household.gameObject.SetActive (false);
-                terminal.Postmen = new List<Postman> (postmen);
-                foreach (var postman in postmen) {
-                    postman.AssignedTerminal = terminal;
-                    postman.OnMailPickup -= HandleMailPickup;
-                    postman.OnMailPickup += terminal.HandleMailPickup;
-                    postman.OnMailDelivered -= HandleMailDelivery;
-                    postman.OnMailDelivered += terminal.HandleMailDelivery;
-                }
-                terminal.Area = this;
-                terminals.Add (terminal);
-                break;
-            }
+    void SpawnTerminal (Household household) {
+        Terminal terminal = Instantiate (GameManager.instance.postOfficePrefab, household.transform.position, Quaternion.identity).GetComponent<Terminal> ();
+        terminal.HouseholdAtLot = household;
+        household.gameObject.SetActive (false);
+        terminal.Postmen = new List<Postman> (postmen);
+        foreach (var postman in postmen) {
+            postman.OnMailPickup -= HandleMailPickup;
+            postman.OnMailDelivered -= HandleMailDelivery;
         }
+        terminal.Area = this;
+        terminals.Add (terminal);
+        AssignPostmenToTerminals ();
         AssignHouseholdsToTerminals ();
     }
 
+    public void AssignPostmenToTerminals () {
+        float shortestDistance = 1000f;
+        foreach (var terminal in terminals) {
+            foreach (var postman in postmen) {
+                float distance = (terminal.transform.position - postman.transform.position).sqrMagnitude;
+                if (distance < shortestDistance) {
+                    postman.Assign (terminal);
+                    shortestDistance = distance;
+                }
+            }
+        }
+    }
+
     public void AssignHouseholdsToTerminals () {
-
+        float shortestDistance = 1000f;
         foreach (var household in households) {
-            float shortestDistance = 1000f;
-
             foreach (var terminal in terminals) {
-                float distance = ((household.transform.position - terminal.transform.position).sqrMagnitude);
-
+                float distance = (household.transform.position - terminal.transform.position).sqrMagnitude;
                 if (distance < shortestDistance) {
                     household.Assign (terminal);
                     shortestDistance = distance;
@@ -147,7 +154,8 @@ public class PostalArea : MonoBehaviour {
         }
 
         if (mail == postman.MailToPickUp) {
-            AssignDeliveryToPostman (mail, postman);
+            postman.Movement.SetMovePosition (mail.transform.position);
+            mail.Assign (postman);
         } else {
             postman.MailInBag.Add (mail);
             mail.AssignedPostman = postman;
@@ -161,7 +169,8 @@ public class PostalArea : MonoBehaviour {
         postman.MailToDeliver = null;
 
         if (postman.MailInBag.Count > 0) {
-            AssignDeliveryToPostman (postman.MailInBag[0], postman);
+            postman.Movement.SetMovePosition (mail.transform.position);
+            postman.MailInBag[0].Assign (postman);
             postman.MailInBag.RemoveAt (0);
 
         } else {
@@ -211,19 +220,6 @@ public class PostalArea : MonoBehaviour {
         mail.AssignedPostman = postman;
         postman.Movement.SetMovePosition (mail.transform.position);
     }
-    void AssignDeliveryToPostman (Mail mail, Postman postman) {
-        postman.Movement.SetMovePosition (mail.Recipient.transform.position);
-        postman.MailToDeliver = mail;
-        postman.MailToPickUp = null;
-        mail.PickedUp = true;
-    }
-
-    void AssignPostmanToTerminal (Terminal terminal, Postman postman) {
-        postman.OnMailPickup -= HandleMailPickup;
-        postman.OnMailPickup += terminal.HandleMailPickup;
-        postman.OnMailDelivered -= HandleMailDelivery;
-        postman.OnMailDelivered += terminal.HandleMailDelivery;
-    }
 
     public Mail GetPickupAssignmentToArea (PostalArea area) {
         foreach (Mail mail in mailToBePickedUp) {
@@ -239,4 +235,22 @@ public class PostalArea : MonoBehaviour {
             mailToBePickedUp.Remove (mail);
         }
     }
+
+    public void ShowPostalRoutes (MapIndicator mapIndicator) {
+        Terminal closestTerminal = mapIndicator.GetClosestHousehold ().AssignedTerminal;
+
+        foreach (var terminal in terminals) {
+            if (terminal == closestTerminal) {
+                terminal.ShowPostalRouteVisual ();
+            } else {
+                terminal.DontShowPostalRouteVisual ();
+            }
+        }
+    }
+    public void DontShowPostalRoutes () {
+        foreach (var terminal in terminals) {
+            terminal.DontShowPostalRouteVisual ();
+        }
+    }
+
 }

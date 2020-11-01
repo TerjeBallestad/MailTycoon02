@@ -13,7 +13,8 @@ public class Postman : MonoBehaviour {
     [HideInInspector] public List<PostmanUppgrade> Uppgrades;
     [HideInInspector] public int Intellect = 16, Capacity = 40, Pollution;
     [HideInInspector] public float Speed = 1f;
-    [HideInInspector] public Transform MapDivisionPosition;
+    [HideInInspector] public MapIndicator MapIndicator;
+    [HideInInspector] public bool PostalRoute = true;
     public event Action<Mail, Postman> OnMailPickup;
     public event Action<Mail, Postman> OnMailDelivered;
 
@@ -60,6 +61,9 @@ public class Postman : MonoBehaviour {
         Movement.SetMovePosition (AssignedTerminal.transform.position);
         yield return new WaitUntil (() => AtTerminal ());
         Debug.Log ("at terminals");
+
+        AssignedTerminal.MailInTerminal.AddRange (MailInBag);
+        MailInBag.Clear ();
         StartCoroutine (UploadMail (AssignedTerminal.GetMailToPickUp (this)));
     }
 
@@ -68,6 +72,31 @@ public class Postman : MonoBehaviour {
             MailInBag.Add (mail);
             yield return new WaitForSeconds (0.1f);
         }
+        StartCoroutine (DeliverMailLoop ());
+    }
+    IEnumerator DeliverMailLoop () {
+        Queue<Household> route = new Queue<Household> (AssignedHouses);
+        List<Mail> routeMail = new List<Mail> (MailInBag);
+        MailInBag.Clear ();
+        while (route.Count > 0) {
+            Household destination = null;
+            Household house = route.Dequeue ();
+            foreach (var mail in routeMail) {
+                if (mail.Recipient == house) {
+                    destination = house;
+                    MailToDeliver = mail;
+                    routeMail.Remove (mail);
+                    break;
+                }
+            }
+            if (house.mailToSend.Count > 0) {
+                destination = house;
+            }
+
+            Movement.SetMovePosition (destination.transform.position);
+            yield return new WaitUntil (() => AtHousehold (destination));
+        }
+        StartCoroutine (ReturnToTerminal ());
     }
 
     bool AtTerminal () {
@@ -76,10 +105,23 @@ public class Postman : MonoBehaviour {
         }
         return false;
     }
-
-    public enum DeliveryMode {
-        adhoc,
-        route,
+    bool AtHousehold (Household house) {
+        if ((transform.position - house.transform.position).sqrMagnitude < 2f) {
+            return true;
+        }
+        return false;
     }
 
+    public void Assign (Terminal terminal) {
+        if (AssignedTerminal != null) {
+            OnMailDelivered -= AssignedTerminal.HandleMailDelivery;
+            OnMailPickup -= AssignedTerminal.HandleMailPickup;
+            AssignedTerminal.Postmen.Remove (this);
+        }
+        AssignedTerminal = terminal;
+        OnMailDelivered += AssignedTerminal.HandleMailDelivery;
+        OnMailPickup += AssignedTerminal.HandleMailPickup;
+        terminal.Postmen.Add (this);
+
+    }
 }
