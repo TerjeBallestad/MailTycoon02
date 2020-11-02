@@ -8,7 +8,7 @@ public class Postman : MonoBehaviour {
     [HideInInspector] public Mail MailToPickUp, MailToDeliver;
     [HideInInspector] public List<Mail> MailInBag, MailToBePickedUp;
     [HideInInspector] public IMovePosition Movement;
-    [HideInInspector] public List<Household> AssignedHouses;
+    public List<Household> AssignedHouses;
     [HideInInspector] public Terminal AssignedTerminal;
     [HideInInspector] public List<PostmanUppgrade> Uppgrades;
     [HideInInspector] public int Intellect = 16, Capacity = 40, Pollution;
@@ -18,8 +18,13 @@ public class Postman : MonoBehaviour {
     public event Action<Mail, Postman> OnMailPickup;
     public event Action<Mail, Postman> OnMailDelivered;
 
-    private void Start () {
+    private void Awake () {
         Movement = GetComponent<IMovePosition> ();
+    }
+
+    private void Start () {
+        MailToBePickedUp = new List<Mail> ();
+        MailInBag = new List<Mail> ();
         foreach (PostmanUppgrade uppgrade in Uppgrades) {
             Intellect += uppgrade.Intellect;
             Speed += uppgrade.Speed;
@@ -58,12 +63,15 @@ public class Postman : MonoBehaviour {
         }
     }
     IEnumerator ReturnToTerminal () {
-        Movement.SetMovePosition (AssignedTerminal.transform.position);
-        yield return new WaitUntil (() => AtTerminal ());
+        Debug.Log ("returningtoterminal" + AssignedTerminal);
+        Movement.SetDestination (AssignedTerminal.transform.position);
+        yield return new WaitUntil (() => Movement.AtDestination ());
         Debug.Log ("at terminals");
-
-        AssignedTerminal.MailInTerminal.AddRange (MailInBag);
-        MailInBag.Clear ();
+        if (MailInBag.Count > 0) {
+            AssignedTerminal.MailInTerminal.AddRange (MailInBag);
+            MailInBag.Clear ();
+        }
+        // yield return new WaitUntil (() => AssignedTerminal.MailInTerminal.Count > 0);
         StartCoroutine (UploadMail (AssignedTerminal.GetMailToPickUp (this)));
     }
 
@@ -76,11 +84,14 @@ public class Postman : MonoBehaviour {
     }
     IEnumerator DeliverMailLoop () {
         Queue<Household> route = new Queue<Household> (AssignedHouses);
+        Debug.Log (route.Count);
         List<Mail> routeMail = new List<Mail> (MailInBag);
         MailInBag.Clear ();
         while (route.Count > 0) {
+            Debug.Log ("starting a delivery");
             Household destination = null;
             Household house = route.Dequeue ();
+            Debug.Log (house.mailToSend.Count);
             foreach (var mail in routeMail) {
                 if (mail.Recipient == house) {
                     destination = house;
@@ -92,35 +103,29 @@ public class Postman : MonoBehaviour {
             if (house.mailToSend.Count > 0) {
                 destination = house;
             }
-
-            Movement.SetMovePosition (destination.transform.position);
-            yield return new WaitUntil (() => AtHousehold (destination));
+            Debug.Log (destination);
+            if (destination) {
+                Movement.SetDestination (destination.transform.position);
+            }
+            Debug.Log ("Going to destination");
+            yield return new WaitUntil (() => Movement.AtDestination ());
+            Debug.Log ("At destination");
         }
+        Debug.Log ("Returning to terminal");
         StartCoroutine (ReturnToTerminal ());
-    }
-
-    bool AtTerminal () {
-        if ((transform.position - AssignedTerminal.transform.position).sqrMagnitude < 2f) {
-            return true;
-        }
-        return false;
-    }
-    bool AtHousehold (Household house) {
-        if ((transform.position - house.transform.position).sqrMagnitude < 2f) {
-            return true;
-        }
-        return false;
     }
 
     public void Assign (Terminal terminal) {
         if (AssignedTerminal != null) {
             OnMailDelivered -= AssignedTerminal.HandleMailDelivery;
             OnMailPickup -= AssignedTerminal.HandleMailPickup;
+            // AssignedTerminal.MailToBePickedUp.Remove (this);
             AssignedTerminal.Postmen.Remove (this);
         }
         AssignedTerminal = terminal;
-        OnMailDelivered += AssignedTerminal.HandleMailDelivery;
-        OnMailPickup += AssignedTerminal.HandleMailPickup;
+        // OnMailDelivered += AssignedTerminal.HandleMailDelivery;
+        // OnMailPickup += AssignedTerminal.HandleMailPickup;
+        // terminal.MailToBePickedUp.Add (this, new List<Mail> ());
         terminal.Postmen.Add (this);
 
     }

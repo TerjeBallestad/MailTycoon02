@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 public interface IMovePosition {
-    void SetMovePosition (Vector3 position);
+    void SetDestination (Vector3 destination);
     void SetMoveSpeed (float speed);
+    bool AtDestination ();
 }

@@ -49,9 +49,11 @@ public class Household : MonoBehaviour {
     public void Assign (Terminal terminal) {
         if (AssignedTerminal != null) {
             AssignedTerminal.Households.Remove (this);
+            OnMailSpawn -= AssignedTerminal.HandleMailSpawn;
         }
         AssignedTerminal = terminal;
         terminal.Households.Add (this);
+        OnMailSpawn += terminal.HandleMailSpawn;
     }
     public void Assign (Mailbox mailbox) {
         if (AssignedMailbox != null) {

@@ -20,6 +20,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     private void Start () {
         OnMouseStartHover += GameManager.instance.HandleMouseOverStart;
         OnMouseEndHover += GameManager.instance.HandleMouseOverEnd;
+        MailToBePickedUp = new Dictionary<Postman, List<Mail>> ();
     }
 
     private void Update () {
@@ -34,7 +35,6 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
         if ((object) GameManager.instance.mouseInteractable == this) {
             OnMouseEndHover?.Invoke ();
-            Debug.Log ("end");
         }
     }
 
@@ -97,7 +97,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
             float shortestDistance = 1000f;
 
             foreach (var postman in Postmen) {
-                float distance = ((household.transform.position - postman.MapIndicator.transform.position).sqrMagnitude);
+                float distance = (household.transform.position - postman.MapIndicator.transform.position).sqrMagnitude;
 
                 if (distance < shortestDistance) {
                     household.Assign (postman);
@@ -105,7 +105,6 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
                 }
             }
         }
-        ShowPostalRouteVisual ();
     }
 
     public void HandleMailPickup (Mail mail, Postman postman) {
@@ -113,7 +112,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         if (mail == postman.MailToPickUp) {
             if (postman.MailToBePickedUp.Count > 0) {
                 postman.MailToPickUp = postman.MailToBePickedUp[0];
-                postman.Movement.SetMovePosition (postman.MailToBePickedUp[0].transform.position);
+                postman.Movement.SetDestination (postman.MailToBePickedUp[0].transform.position);
                 postman.MailToBePickedUp.RemoveAt (0);
             } else {
                 postman.StartCoroutine ("ReturnToTerminal");
@@ -159,11 +158,11 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         Destroy (mail.gameObject);
     }
 
-    void HandleMailSpawn (Household house) {
+    public void HandleMailSpawn (Household house) {
         Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
-        MailToBePickedUp[house.AssignedPostman].Add (mail);
-        mail.SenderArea = Area;
         house.mailToSend.Add (mail);
+        // MailToBePickedUp[house.AssignedPostman].Add (mail);
+        mail.SenderArea = Area;
         Household recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
         while (recipientHouse.Inhabitants == 0) {
             recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
@@ -200,10 +199,10 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         }
         postman.MailToPickUp = mail;
         mail.AssignedPostman = postman;
-        postman.Movement.SetMovePosition (mail.transform.position);
+        postman.Movement.SetDestination (mail.transform.position);
     }
     void AssignDeliveryToPostman (Mail mail, Postman postman) {
-        postman.Movement.SetMovePosition (mail.Recipient.transform.position);
+        postman.Movement.SetDestination (mail.Recipient.transform.position);
         postman.MailToDeliver = mail;
         postman.MailToPickUp = null;
         mail.PickedUp = true;

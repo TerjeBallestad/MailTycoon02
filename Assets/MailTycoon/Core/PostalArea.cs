@@ -92,7 +92,7 @@ public class PostalArea : MonoBehaviour {
         postman.gameObject.name = this.name + " postman";
         postman.OnMailPickup += HandleMailPickup;
         postman.OnMailDelivered += HandleMailDelivery;
-        postman.StartCoroutine ("WaitForAssignment");
+        // postman.StartCoroutine ("WaitForAssignment");
     }
 
     public int DespawnPostman () {
@@ -115,14 +115,14 @@ public class PostalArea : MonoBehaviour {
         }
         terminal.Area = this;
         terminals.Add (terminal);
-        AssignPostmenToTerminals ();
         AssignHouseholdsToTerminals ();
+        AssignPostmenToTerminals ();
     }
 
     public void AssignPostmenToTerminals () {
-        float shortestDistance = 1000f;
-        foreach (var terminal in terminals) {
-            foreach (var postman in postmen) {
+        foreach (var postman in postmen) {
+            float shortestDistance = 1000f;
+            foreach (var terminal in terminals) {
                 float distance = (terminal.transform.position - postman.transform.position).sqrMagnitude;
                 if (distance < shortestDistance) {
                     postman.Assign (terminal);
@@ -130,11 +130,18 @@ public class PostalArea : MonoBehaviour {
                 }
             }
         }
+        foreach (var terminal in terminals) {
+            terminal.UpdatePostalRoutes ();
+        }
+        foreach (var postman in postmen) {
+            postman.StartCoroutine ("ReturnToTerminal");
+        }
     }
 
     public void AssignHouseholdsToTerminals () {
-        float shortestDistance = 1000f;
         foreach (var household in households) {
+            household.OnMailSpawn -= HandleMailSpawn;
+            float shortestDistance = 1000f;
             foreach (var terminal in terminals) {
                 float distance = (household.transform.position - terminal.transform.position).sqrMagnitude;
                 if (distance < shortestDistance) {
@@ -154,7 +161,7 @@ public class PostalArea : MonoBehaviour {
         }
 
         if (mail == postman.MailToPickUp) {
-            postman.Movement.SetMovePosition (mail.transform.position);
+            postman.Movement.SetDestination (mail.transform.position);
             mail.Assign (postman);
         } else {
             postman.MailInBag.Add (mail);
@@ -169,7 +176,7 @@ public class PostalArea : MonoBehaviour {
         postman.MailToDeliver = null;
 
         if (postman.MailInBag.Count > 0) {
-            postman.Movement.SetMovePosition (mail.transform.position);
+            postman.Movement.SetDestination (mail.transform.position);
             postman.MailInBag[0].Assign (postman);
             postman.MailInBag.RemoveAt (0);
 
@@ -218,7 +225,7 @@ public class PostalArea : MonoBehaviour {
         }
         postman.MailToPickUp = mail;
         mail.AssignedPostman = postman;
-        postman.Movement.SetMovePosition (mail.transform.position);
+        postman.Movement.SetDestination (mail.transform.position);
     }
 
     public Mail GetPickupAssignmentToArea (PostalArea area) {
