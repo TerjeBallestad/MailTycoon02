@@ -132,6 +132,7 @@ public class PostalArea : MonoBehaviour {
         }
         foreach (var terminal in terminals) {
             terminal.UpdatePostalRoutes ();
+            // terminal.ShowPostalRouteVisual ();
         }
         foreach (var postman in postmen) {
             postman.StartCoroutine ("ReturnToTerminal");

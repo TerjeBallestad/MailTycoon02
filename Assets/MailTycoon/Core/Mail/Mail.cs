@@ -32,8 +32,10 @@ public class Mail : MonoBehaviour {
     }
 
     public void Assign (Postman postman) {
-        postman.MailToDeliver = this;
-        postman.MailToPickUp = null;
+        // postman.MailToDeliver = this;
+        // postman.MailToPickUp = null;
+        postman.MailInBag.Add (this);
         PickedUp = true;
+        AssignedPostman = postman;
     }
 }

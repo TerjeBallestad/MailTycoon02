@@ -15,7 +15,7 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     [HideInInspector] public event Action<IMouseInteractable> OnMouseStartHover;
     [HideInInspector] public event Action OnMouseEndHover;
     bool updateRoutes = false;
-    bool showRoutes = true;
+    public bool ShouldUpdatePostalRoutes = true;
 
     private void Start () {
         OnMouseStartHover += GameManager.instance.HandleMouseOverStart;
@@ -24,8 +24,10 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     }
 
     private void Update () {
-        if (updateRoutes)
+        if (updateRoutes) {
+            UpdatePostalRoutes ();
             UpdatePostalRoutesVisual ();
+        }
     }
 
     private void OnMouseEnter () {
@@ -43,12 +45,12 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
     }
     public void OnClickStart () {
 
-        if (showRoutes) {
+        if (ShouldUpdatePostalRoutes) {
             ShowPostalRouteVisual ();
-            showRoutes = !showRoutes;
+            ShouldUpdatePostalRoutes = !ShouldUpdatePostalRoutes;
         } else {
             DontShowPostalRouteVisual ();
-            showRoutes = !showRoutes;
+            ShouldUpdatePostalRoutes = !ShouldUpdatePostalRoutes;
         }
 
     }
@@ -70,7 +72,6 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
                 household.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[Postmen.IndexOf (postman) % GameManager.instance.LightColors.Count];
             }
         }
-        updateRoutes = true;
     }
 
     void UpdatePostalRoutesVisual () {

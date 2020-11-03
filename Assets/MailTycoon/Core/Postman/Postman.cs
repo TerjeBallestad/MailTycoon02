@@ -6,7 +6,7 @@ using UnityEngine;
 public class Postman : MonoBehaviour {
     [HideInInspector] public PostalArea postalArea;
     [HideInInspector] public Mail MailToPickUp, MailToDeliver;
-    [HideInInspector] public List<Mail> MailInBag, MailToBePickedUp;
+    public List<Mail> MailInBag, MailToBePickedUp;
     [HideInInspector] public IMovePosition Movement;
     public List<Household> AssignedHouses;
     [HideInInspector] public Terminal AssignedTerminal;
@@ -17,6 +17,7 @@ public class Postman : MonoBehaviour {
     [HideInInspector] public bool PostalRoute = true;
     public event Action<Mail, Postman> OnMailPickup;
     public event Action<Mail, Postman> OnMailDelivered;
+    Household deliveryDestination;
 
     private void Awake () {
         Movement = GetComponent<IMovePosition> ();
@@ -34,27 +35,32 @@ public class Postman : MonoBehaviour {
         Movement.SetMoveSpeed (Speed);
     }
 
-    private void OnTriggerEnter2D (Collider2D other) {
-        Mail mail = other.GetComponent<Mail> ();
-        if (mail) {
-            OnMailPickup?.Invoke (mail, this);
-        }
-    }
+    // private void OnTriggerEnter2D (Collider2D other) {
+    //     Mail mail = other.GetComponent<Mail> ();
+    //     Household house = other.GetComponent<Household> ();
+    //     if (mail) {
+    //         OnMailPickup?.Invoke (mail, this);
+    //         MailInBag.Add (mail);
+    //         mail.Assign (this);
+    //         Destroy (mail.GetComponent<Collider2D> ());
+    //     }
+    //     if (house == deliveryDestination) {
 
-    private void OnTriggerStay2D (Collider2D other) {
+    //     }
+    // }
 
-        if (MailToPickUp) {
-            if (other.gameObject == MailToPickUp.gameObject) {
-                OnMailPickup?.Invoke (MailToPickUp, this);
-            }
-
-        }
-        if (MailToDeliver) {
-            if (other.gameObject == MailToDeliver.Recipient.gameObject) {
-                OnMailDelivered?.Invoke (MailToDeliver, this);
-            }
-        }
-    }
+    // private void OnTriggerStay2D (Collider2D other) {
+    //     if (MailToPickUp) {
+    //         if (other.gameObject == MailToPickUp.gameObject) {
+    //             OnMailPickup?.Invoke (MailToPickUp, this);
+    //         }
+    //     }
+    //     if (MailToDeliver) {
+    //         if (other.gameObject == MailToDeliver.Recipient.gameObject) {
+    //             OnMailDelivered?.Invoke (MailToDeliver, this);
+    //         }
+    //     }
+    // }
 
     IEnumerator WaitForAssignment () {
         while (!MailToPickUp && !MailToDeliver) {
@@ -67,50 +73,50 @@ public class Postman : MonoBehaviour {
         Movement.SetDestination (AssignedTerminal.transform.position);
         yield return new WaitUntil (() => Movement.AtDestination ());
         Debug.Log ("at terminals");
+        yield return new WaitForSeconds (1f);
+
         if (MailInBag.Count > 0) {
+            Debug.Log ("putting in some mail");
             AssignedTerminal.MailInTerminal.AddRange (MailInBag);
             MailInBag.Clear ();
         }
         // yield return new WaitUntil (() => AssignedTerminal.MailInTerminal.Count > 0);
-        StartCoroutine (UploadMail (AssignedTerminal.GetMailToPickUp (this)));
+        StartCoroutine (UploadMail (AssignedTerminal.GetMailToDeliver (this)));
     }
 
     IEnumerator UploadMail (List<Mail> mailList) {
         foreach (var mail in mailList) {
+            Debug.Log ("uploading mail");
             MailInBag.Add (mail);
             yield return new WaitForSeconds (0.1f);
         }
         StartCoroutine (DeliverMailLoop ());
     }
     IEnumerator DeliverMailLoop () {
-        Queue<Household> route = new Queue<Household> (AssignedHouses);
-        Debug.Log (route.Count);
-        List<Mail> routeMail = new List<Mail> (MailInBag);
+        List<Mail> route = new List<Mail> (MailInBag);
         MailInBag.Clear ();
-        while (route.Count > 0) {
-            Debug.Log ("starting a delivery");
-            Household destination = null;
-            Household house = route.Dequeue ();
-            Debug.Log (house.mailToSend.Count);
-            foreach (var mail in routeMail) {
+        Debug.Log ("starting a delivery");
+        foreach (var house in AssignedHouses) {
+            foreach (var mail in route) {
                 if (mail.Recipient == house) {
-                    destination = house;
-                    MailToDeliver = mail;
-                    routeMail.Remove (mail);
-                    break;
+                    Debug.Log ("Delivering");
+                    Movement.SetDestination (house.transform.position);
+                    yield return new WaitUntil (() => Movement.AtDestination ());
+                    route.Remove (mail);
+                    Destroy (mail);
                 }
             }
             if (house.mailToSend.Count > 0) {
-                destination = house;
+                Debug.Log ("Picking up");
+                Movement.SetDestination (house.transform.position);
+                yield return new WaitUntil (() => Movement.AtDestination ());
+                foreach (var mail in house.mailToSend) {
+                    mail.Assign (this);
+                }
+                house.mailToSend.Clear ();
             }
-            Debug.Log (destination);
-            if (destination) {
-                Movement.SetDestination (destination.transform.position);
-            }
-            Debug.Log ("Going to destination");
-            yield return new WaitUntil (() => Movement.AtDestination ());
-            Debug.Log ("At destination");
         }
+        yield return new WaitForSeconds (1f);
         Debug.Log ("Returning to terminal");
         StartCoroutine (ReturnToTerminal ());
     }
