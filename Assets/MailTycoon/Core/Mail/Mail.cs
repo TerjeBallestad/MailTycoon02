@@ -7,7 +7,7 @@ public class Mail : MonoBehaviour {
     [HideInInspector] public Household Recipient;
     [HideInInspector] public PostalArea RecipientArea;
     [HideInInspector] public PostalArea SenderArea;
-    [HideInInspector] public Postman AssignedPostman;
+    public Postman AssignedPostman;
     [HideInInspector] public event Action<Mail, Postman> OnMailNotDeliveredInTime;
     [HideInInspector] public bool PickedUp = false;
     SpriteRenderer spriteRenderer;
@@ -18,7 +18,7 @@ public class Mail : MonoBehaviour {
 
     void FixedUpdate () {
         if (AssignedPostman && PickedUp) {
-            spriteRenderer.sprite = null;
+            // spriteRenderer.sprite = null;
 
         } else {
             Color color = spriteRenderer.color;
@@ -26,7 +26,7 @@ public class Mail : MonoBehaviour {
             color.g -= 0.0005f;
             spriteRenderer.color = color;
             if (spriteRenderer.color.g < 0.10f) {
-                OnMailNotDeliveredInTime?.Invoke (this, AssignedPostman);
+                // OnMailNotDeliveredInTime?.Invoke (this, AssignedPostman);
             }
         }
     }
@@ -34,8 +34,18 @@ public class Mail : MonoBehaviour {
     public void Assign (Postman postman) {
         // postman.MailToDeliver = this;
         // postman.MailToPickUp = null;
+
         postman.MailInBag.Add (this);
+
         PickedUp = true;
         AssignedPostman = postman;
+        transform.SetParent (postman.transform);
+    }
+
+    public void Assign (Terminal terminal) {
+        terminal.MailInTerminal.Add (this);
+        AssignedPostman = null;
+        transform.SetParent (terminal.transform);
+
     }
 }

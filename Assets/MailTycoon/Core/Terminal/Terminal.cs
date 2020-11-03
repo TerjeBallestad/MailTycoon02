@@ -7,7 +7,7 @@ using UnityEngine;
 public class Terminal : MonoBehaviour, IMouseInteractable {
     [HideInInspector] public Household HouseholdAtLot;
     [HideInInspector] public List<Postman> Postmen;
-    [HideInInspector] public List<Household> Households;
+    public List<Household> Households;
     public List<Mail> MailInTerminal;
     [HideInInspector] public Dictionary<Postman, List<Household>> Routes;
     [HideInInspector] public Dictionary<Postman, List<Mail>> MailToBePickedUp;
@@ -110,25 +110,25 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     public void HandleMailPickup (Mail mail, Postman postman) {
 
-        if (mail == postman.MailToPickUp) {
-            if (postman.MailToBePickedUp.Count > 0) {
-                postman.MailToPickUp = postman.MailToBePickedUp[0];
-                postman.Movement.SetDestination (postman.MailToBePickedUp[0].transform.position);
-                postman.MailToBePickedUp.RemoveAt (0);
-            } else {
-                postman.StartCoroutine ("ReturnToTerminal");
-            }
-        }
+        // if (mail == postman.MailToPickUp) {
+        //     if (postman.MailToBePickedUp.Count > 0) {
+        //         postman.MailToPickUp = postman.MailToBePickedUp[0];
+        //         postman.Movement.SetDestination (postman.MailToBePickedUp[0].transform.position);
+        //         postman.MailToBePickedUp.RemoveAt (0);
+        //     } else {
+        //         postman.StartCoroutine ("ReturnToTerminal");
+        //     }
+        // }
 
-        if (mail == postman.MailToPickUp) {
-            AssignDeliveryToPostman (mail, postman);
-        } else {
-            postman.MailInBag.Add (mail);
-            mail.AssignedPostman = postman;
-            mail.PickedUp = true;
-            RemovePickupAssignment (mail, postman);
-        }
-        Destroy (mail.GetComponent<Collider2D> ());
+        // if (mail == postman.MailToPickUp) {
+        //     AssignDeliveryToPostman (mail, postman);
+        // } else {
+        //     postman.MailInBag.Add (mail);
+        //     mail.AssignedPostman = postman;
+        //     mail.PickedUp = true;
+        //     RemovePickupAssignment (mail, postman);
+        // }
+        // Destroy (mail.GetComponent<Collider2D> ());
     }
 
     public void HandleMailDelivery (Mail mail, Postman postman) {
@@ -138,9 +138,9 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
             AssignDeliveryToPostman (postman.MailInBag[0], postman);
             postman.MailInBag.RemoveAt (0);
 
-        } else {
+            // } else {
 
-            postman.MailToBePickedUp = postman.AssignedTerminal.GetMailToPickUp (postman);
+            //     postman.MailToBePickedUp = postman.AssignedTerminal.GetMailToPickUp (postman);
 
         }
 
@@ -161,13 +161,14 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
 
     public void HandleMailSpawn (Household house) {
         Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
-        house.mailToSend.Add (mail);
         // MailToBePickedUp[house.AssignedPostman].Add (mail);
         mail.SenderArea = Area;
         Household recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
         while (recipientHouse.Inhabitants == 0) {
             recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
         }
+        mail.Sender = house;
+        house.MailToSend.Add (mail);
         mail.Recipient = recipientHouse;
         mail.OnMailNotDeliveredInTime += HandleMailNotInTime;
         mail.transform.position = house.transform.position + new Vector3 (UnityEngine.Random.Range (-0.02f, 0.02f), UnityEngine.Random.Range (-0.02f, 0.02f), 0);
@@ -181,15 +182,17 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
                 mailList.Add (mail);
             }
         }
+        MailInTerminal.RemoveAll (mail => mailList.Contains (mail));
         return mailList;
     }
+
     public List<Mail> GetMailToPickUp (Postman postman) {
         List<Mail> mail = new List<Mail> ();
 
         foreach (var house in postman.AssignedHouses) {
 
-            mail.AddRange (house.mailToSend);
-            house.mailToSend.Clear ();
+            mail.AddRange (house.MailToSend);
+            house.MailToSend.Clear ();
         }
 
         return mail;

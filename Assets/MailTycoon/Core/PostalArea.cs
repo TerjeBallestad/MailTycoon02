@@ -12,13 +12,12 @@ public class PostalArea : MonoBehaviour {
     List<Mail> mailToBePickedUp;
     public List<Terminal> terminals;
     List<Postman> postmen;
-
-    List<Household> households;
+    public List<Household> Households;
     new Collider collider;
 
     private void Start () {
         terminals = new List<Terminal> ();
-        households = new List<Household> ();
+        Households = new List<Household> ();
         mailToBePickedUp = new List<Mail> ();
         postmen = new List<Postman> ();
         collider = GetComponent<Collider> ();
@@ -26,15 +25,15 @@ public class PostalArea : MonoBehaviour {
 
         SpawnHouseholds ();
         for (int i = 0; i < 5; i++) {
-
             SpawnPostman ();
         }
 
-        for (int i = 0; i < 2; i++) {
-            Household randomHouse = households.ElementAt (Random.Range (0, households.Count));
+        for (int i = 0; i < 1; i++) {
+            Household randomHouse = Households.ElementAt (Random.Range (0, Households.Count));
             SpawnTerminal (randomHouse);
         }
-
+        AssignHouseholdsToTerminals ();
+        AssignPostmenToTerminals ();
     }
 
     void SpawnHouseholds () {
@@ -53,12 +52,13 @@ public class PostalArea : MonoBehaviour {
                         float sample = Mathf.PerlinNoise (coordX, coordY);
                         Household house = Instantiate (GameManager.instance.householdPrefab).GetComponent<Household> ();
                         house.gameObject.name = "house";
-                        house.OnMailSpawn += HandleMailSpawn;
+                        // house.OnMailSpawn += HandleMailSpawn;
                         SpriteRenderer rend = house.GetComponent<SpriteRenderer> ();
 
+                        house.AssignedPostalArea = this;
                         house.transform.SetParent (transform);
                         house.transform.position = position + new Vector3 (Random.Range (-0.02f, 0.02f), Random.Range (-0.02f, 0.02f), 0);
-                        house.HouseColor = GameManager.instance.MediumColors[households.Count % GameManager.instance.MediumColors.Count];
+                        house.HouseColor = GameManager.instance.MediumColors[Households.Count % GameManager.instance.MediumColors.Count];
                         house.ResetToDefaultColor ();
 
                         if (sample > 0.8f) {
@@ -73,7 +73,7 @@ public class PostalArea : MonoBehaviour {
                         house.PropertyValue = (int) (sample * 100);
                         house.Inhabitants = (int) (sample * 100);
 
-                        households.Add (house);
+                        Households.Add (house);
                     }
                 }
             }
@@ -81,7 +81,7 @@ public class PostalArea : MonoBehaviour {
     }
 
     public void SpawnPostman () {
-        Household randomHouse = households.ElementAt (Random.Range (0, households.Count));
+        Household randomHouse = Households.ElementAt (Random.Range (0, Households.Count));
         Postman postman = Instantiate (GameManager.instance.postmanPrefab, randomHouse.transform.position, Quaternion.identity).GetComponent<Postman> ();
         MapIndicator mapIndicator = Instantiate (GameManager.instance.mapIndicatorPrefab, new Vector3 (randomHouse.transform.position.x, randomHouse.transform.position.y, -1f), Quaternion.identity).GetComponent<MapIndicator> ();
         mapIndicator.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[postmen.Count];
@@ -115,8 +115,7 @@ public class PostalArea : MonoBehaviour {
         }
         terminal.Area = this;
         terminals.Add (terminal);
-        AssignHouseholdsToTerminals ();
-        AssignPostmenToTerminals ();
+
     }
 
     public void AssignPostmenToTerminals () {
@@ -133,16 +132,23 @@ public class PostalArea : MonoBehaviour {
         foreach (var terminal in terminals) {
             terminal.UpdatePostalRoutes ();
             // terminal.ShowPostalRouteVisual ();
-        }
-        foreach (var postman in postmen) {
-            postman.StartCoroutine ("ReturnToTerminal");
+            List<Color> availableColors = new List<Color> (GameManager.instance.LightColors);
+            foreach (var postman in terminal.Postmen) {
+                postman.StartCoroutine ("ReturnToTerminal");
+                //DEBUG
+                Color randomColor = availableColors[Random.Range (0, availableColors.Count)];
+                availableColors.Remove (randomColor);
+                foreach (var house in postman.AssignedHouses) {
+                    house.GetComponent<SpriteRenderer> ().color = randomColor;
+                }
+            }
         }
     }
 
     public void AssignHouseholdsToTerminals () {
-        foreach (var household in households) {
-            household.OnMailSpawn -= HandleMailSpawn;
+        foreach (var household in Households) {
             float shortestDistance = 1000f;
+            // household.OnMailSpawn -= HandleMailSpawn;
             foreach (var terminal in terminals) {
                 float distance = (household.transform.position - terminal.transform.position).sqrMagnitude;
                 if (distance < shortestDistance) {
@@ -205,10 +211,10 @@ public class PostalArea : MonoBehaviour {
         Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
         mailToBePickedUp.Add (mail);
         mail.SenderArea = this;
-        house.mailToSend.Add (mail);
-        Household recipientHouse = households.ElementAt (Random.Range (0, households.Count));
+        house.MailToSend.Add (mail);
+        Household recipientHouse = Households.ElementAt (Random.Range (0, Households.Count));
         while (recipientHouse.Inhabitants == 0) {
-            recipientHouse = households.ElementAt (Random.Range (0, households.Count));
+            recipientHouse = Households.ElementAt (Random.Range (0, Households.Count));
         }
         mail.Recipient = recipientHouse;
         mail.OnMailNotDeliveredInTime += HandleMailNotInTime;
