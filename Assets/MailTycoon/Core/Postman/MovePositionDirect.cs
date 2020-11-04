@@ -10,7 +10,7 @@ public class MovePositionDirect : MonoBehaviour, IMovePosition {
     public void SetDestination (Vector3 destination) {
         this.destination = destination;
     }
-    public void SetMoveSpeed (float speed) {
+    public void SetSpeed (float speed) {
         Movement.SetSpeed (speed);
     }
 

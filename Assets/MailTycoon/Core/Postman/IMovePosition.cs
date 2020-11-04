@@ -2,6 +2,6 @@
 
 public interface IMovePosition {
     void SetDestination (Vector3 destination);
-    void SetMoveSpeed (float speed);
+    void SetSpeed (float speed);
     bool AtDestination ();
 }

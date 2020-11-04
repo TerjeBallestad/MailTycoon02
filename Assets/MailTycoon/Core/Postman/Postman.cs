@@ -31,7 +31,7 @@ public class Postman : MonoBehaviour {
             Capacity += uppgrade.Capacity;
             Pollution += uppgrade.Pollution;
         }
-        Movement.SetMoveSpeed (Speed);
+        Movement.SetSpeed (Speed);
     }
 
     // private void OnTriggerEnter2D (Collider2D other) {

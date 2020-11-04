@@ -11,7 +11,7 @@ public class PostalArea : MonoBehaviour {
     // [SerializeField] int targetInhabitants;
     List<Mail> mailToBePickedUp;
     public List<Terminal> terminals;
-    List<Postman> postmen;
+    [SerializeField] List<Postman> postmen;
     public List<Household> Households;
     new Collider collider;
 
@@ -24,16 +24,17 @@ public class PostalArea : MonoBehaviour {
         GameManager.instance.selectedArea = this;
 
         SpawnHouseholds ();
-        for (int i = 0; i < 5; i++) {
-            SpawnPostman ();
+        for (int i = 0; i < 3; i++) {
+            SpawnPostman (i + 1);
         }
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 2; i++) {
             Household randomHouse = Households.ElementAt (Random.Range (0, Households.Count));
-            SpawnTerminal (randomHouse);
+            SpawnTerminal (randomHouse, i + 1);
         }
         AssignHouseholdsToTerminals ();
         AssignPostmenToTerminals ();
+        SpawnLinehaul ();
     }
 
     void SpawnHouseholds () {
@@ -80,16 +81,16 @@ public class PostalArea : MonoBehaviour {
         }
     }
 
-    public void SpawnPostman () {
+    public void SpawnPostman (int index) {
         Household randomHouse = Households.ElementAt (Random.Range (0, Households.Count));
         Postman postman = Instantiate (GameManager.instance.postmanPrefab, randomHouse.transform.position, Quaternion.identity).GetComponent<Postman> ();
         MapIndicator mapIndicator = Instantiate (GameManager.instance.mapIndicatorPrefab, new Vector3 (randomHouse.transform.position.x, randomHouse.transform.position.y, -1f), Quaternion.identity).GetComponent<MapIndicator> ();
-        mapIndicator.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[postmen.Count];
+        mapIndicator.GetComponent<SpriteRenderer> ().color = GameManager.instance.LightColors[postmen.Count % GameManager.instance.LightColors.Count];
         postman.MapIndicator = mapIndicator;
         mapIndicator.gameObject.SetActive (false);
         postmen.Add (postman);
         postman.postalArea = this;
-        postman.gameObject.name = this.name + " postman";
+        postman.gameObject.name = this.name + " postman " + index;
         postman.OnMailPickup += HandleMailPickup;
         postman.OnMailDelivered += HandleMailDelivery;
         // postman.StartCoroutine ("WaitForAssignment");
@@ -104,11 +105,12 @@ public class PostalArea : MonoBehaviour {
         return postmen.Count;
     }
 
-    void SpawnTerminal (Household household) {
+    void SpawnTerminal (Household household, int index) {
         Terminal terminal = Instantiate (GameManager.instance.postOfficePrefab, household.transform.position, Quaternion.identity).GetComponent<Terminal> ();
+        terminal.gameObject.name = "Terminal " + index;
         terminal.HouseholdAtLot = household;
         household.gameObject.SetActive (false);
-        terminal.Postmen = new List<Postman> (postmen);
+        terminal.Postmen = new List<Postman> ();
         foreach (var postman in postmen) {
             postman.OnMailPickup -= HandleMailPickup;
             postman.OnMailDelivered -= HandleMailDelivery;
@@ -116,6 +118,13 @@ public class PostalArea : MonoBehaviour {
         terminal.Area = this;
         terminals.Add (terminal);
 
+    }
+
+    void SpawnLinehaul () {
+        Linehaul linehaul = Instantiate (GameManager.instance.linehaulPrefab).GetComponent<Linehaul> ();
+        linehaul.transform.position = Households.ElementAt (Random.Range (0, Households.Count)).transform.position;
+        linehaul.Route = new List<Terminal> (terminals);
+        linehaul.StartCoroutine ("GoToNextTerminal");
     }
 
     public void AssignPostmenToTerminals () {
@@ -129,18 +138,23 @@ public class PostalArea : MonoBehaviour {
                 }
             }
         }
+        List<Color> availableColors = new List<Color> (GameManager.instance.LightColors);
         foreach (var terminal in terminals) {
             terminal.UpdatePostalRoutes ();
             // terminal.ShowPostalRouteVisual ();
-            List<Color> availableColors = new List<Color> (GameManager.instance.LightColors);
+
             foreach (var postman in terminal.Postmen) {
-                postman.StartCoroutine ("ReturnToTerminal");
                 //DEBUG
+
                 Color randomColor = availableColors[Random.Range (0, availableColors.Count)];
                 availableColors.Remove (randomColor);
+                if (availableColors.Count < 1) {
+                    availableColors.AddRange (GameManager.instance.LightColors);
+                }
                 foreach (var house in postman.AssignedHouses) {
                     house.GetComponent<SpriteRenderer> ().color = randomColor;
                 }
+                postman.StartCoroutine ("ReturnToTerminal");
             }
         }
     }

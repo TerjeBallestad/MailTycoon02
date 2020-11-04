@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Terminal : MonoBehaviour, IMouseInteractable {
     [HideInInspector] public Household HouseholdAtLot;
-    [HideInInspector] public List<Postman> Postmen;
+    public List<Postman> Postmen;
     public List<Household> Households;
     public List<Mail> MailInTerminal;
     [HideInInspector] public Dictionary<Postman, List<Household>> Routes;

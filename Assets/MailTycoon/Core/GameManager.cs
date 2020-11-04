@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour {
-    public GameObject mailPrefab, postmanPrefab, householdPrefab, postOfficePrefab, mapIndicatorPrefab;
+    public GameObject mailPrefab, postmanPrefab, householdPrefab, postOfficePrefab, mapIndicatorPrefab, linehaulPrefab;
     [HideInInspector] public static GameManager instance;
     [HideInInspector] public PostalArea selectedArea;
     [HideInInspector] public IMouseInteractable mouseInteractable;
