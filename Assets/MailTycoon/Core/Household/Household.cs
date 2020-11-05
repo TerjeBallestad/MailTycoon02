@@ -15,14 +15,18 @@ public class Household : MonoBehaviour {
     public Terminal AssignedTerminal;
     public Mailbox AssignedMailbox;
     public int Inhabitants, PropertyValue;
+    ObjectPool<Mail> mailPool;
 
+    private void Start () {
+        mailPool = GameManager.instance.MailPool;
+    }
     private void OnEnable () {
         StartCoroutine (SpawnMailLoop ());
         MailToSend = new List<Mail> ();
     }
 
     void SpawnMail () {
-        Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
+        Mail mail = mailPool.Get ();
         // MailToBePickedUp[house.AssignedPostman].Add (mail);
         mail.SenderArea = AssignedPostalArea;
         Household recipientHouse = AssignedPostalArea.Households.ElementAt (UnityEngine.Random.Range (0, AssignedPostalArea.Households.Count));

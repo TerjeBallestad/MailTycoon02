@@ -12,9 +12,15 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public event Action ShowAdjustmentLayer, DontShowAdjustmentLayer;
     [HideInInspector] public MapIndicator MovingIdicator;
     public List<Color> MediumColors, LightColors;
+    public MailPool MailPool;
 
     private void Awake () {
         instance = this;
+        MailPool = gameObject.AddComponent<MailPool> ();
+        MailPool.prefab = mailPrefab.GetComponent<Mail> ();
+    }
+    private void Start () {
+
     }
 
     void Update () {

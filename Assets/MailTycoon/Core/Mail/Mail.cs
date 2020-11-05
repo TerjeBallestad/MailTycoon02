@@ -12,7 +12,11 @@ public class Mail : MonoBehaviour {
     [HideInInspector] public bool PickedUp = false;
     SpriteRenderer spriteRenderer;
 
-    void Start () {
+    private void OnEnable () {
+        spriteRenderer.color = Color.white;
+    }
+
+    void Awake () {
         spriteRenderer = GetComponent<SpriteRenderer> ();
     }
 

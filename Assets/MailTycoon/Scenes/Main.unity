@@ -533,8 +533,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6134cabf11525422e80f94aa1be100a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 20
-  gridHeight: 20
+  gridWidth: 10
+  gridHeight: 10
   household1: {fileID: 21300000, guid: 7db943bcabae34da9b25c35dac00be42, type: 3}
   household2: {fileID: 21300000, guid: 6c833fbd0a31c4d08a4b2375aca1f744, type: 3}
   household3: {fileID: 21300000, guid: 97cce04ceab2a4e84a78274f3778d963, type: 3}

@@ -111,7 +111,7 @@ public class Postman : MonoBehaviour {
             }
             route.RemoveAll (mail => delivered.Contains (mail));
             foreach (var mail in delivered) {
-                DestroyImmediate (mail.gameObject);
+                GameManager.instance.MailPool.ReturnToPool (mail);
             }
             delivered.Clear ();
             if (house.MailToSend.Count > 0) {
