@@ -68,16 +68,12 @@ public class Postman : MonoBehaviour {
         }
     }
     IEnumerator ReturnToTerminal () {
-        Debug.Log ("returningtoterminal" + AssignedTerminal);
         Movement.SetDestination (AssignedTerminal.transform.position);
         yield return new WaitUntil (() => Movement.AtDestination ());
-        Debug.Log ("at terminals");
         yield return new WaitForSeconds (1f);
 
         foreach (var mail in MailInBag) {
             mail.Assign (AssignedTerminal);
-            Debug.Log ("putting in some mail");
-            Debug.Log (MailInBag.Count + " " + mail.name);
         }
         MailInBag.Clear ();
         // yield return new WaitUntil (() => AssignedTerminal.MailInTerminal.Count > 0);
@@ -86,7 +82,6 @@ public class Postman : MonoBehaviour {
 
     IEnumerator UploadMail (List<Mail> mailList) {
         foreach (var mail in mailList) {
-            Debug.Log ("uploading mail");
             mail.Assign (this);
             yield return new WaitForSeconds (1f);
         }
@@ -98,11 +93,9 @@ public class Postman : MonoBehaviour {
             route.Add (mail);
         }
         MailInBag.Clear ();
-        Debug.Log ("starting a delivery");
         foreach (var house in AssignedHouses) {
             foreach (var mail in route) {
                 if (mail.Recipient == house) {
-                    Debug.Log ("Delivering");
                     Movement.SetDestination (house.transform.position);
                     yield return new WaitUntil (() => Movement.AtDestination ());
                     yield return new WaitForSeconds (1f);
@@ -115,7 +108,6 @@ public class Postman : MonoBehaviour {
             }
             delivered.Clear ();
             if (house.MailToSend.Count > 0) {
-                Debug.Log ("Picking up");
                 Movement.SetDestination (house.transform.position);
                 yield return new WaitUntil (() => Movement.AtDestination ());
                 foreach (var mail in house.MailToSend) {
@@ -127,7 +119,6 @@ public class Postman : MonoBehaviour {
 
         route.Clear ();
         yield return new WaitForSeconds (1f);
-        Debug.Log ("Returning to terminal");
         StartCoroutine (ReturnToTerminal ());
     }
 

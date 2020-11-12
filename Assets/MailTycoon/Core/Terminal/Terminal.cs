@@ -108,72 +108,6 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         }
     }
 
-    public void HandleMailPickup (Mail mail, Postman postman) {
-
-        // if (mail == postman.MailToPickUp) {
-        //     if (postman.MailToBePickedUp.Count > 0) {
-        //         postman.MailToPickUp = postman.MailToBePickedUp[0];
-        //         postman.Movement.SetDestination (postman.MailToBePickedUp[0].transform.position);
-        //         postman.MailToBePickedUp.RemoveAt (0);
-        //     } else {
-        //         postman.StartCoroutine ("ReturnToTerminal");
-        //     }
-        // }
-
-        // if (mail == postman.MailToPickUp) {
-        //     AssignDeliveryToPostman (mail, postman);
-        // } else {
-        //     postman.MailInBag.Add (mail);
-        //     mail.AssignedPostman = postman;
-        //     mail.PickedUp = true;
-        //     RemovePickupAssignment (mail, postman);
-        // }
-        // Destroy (mail.GetComponent<Collider2D> ());
-    }
-
-    public void HandleMailDelivery (Mail mail, Postman postman) {
-        postman.MailToDeliver = null;
-
-        if (postman.MailInBag.Count > 0) {
-            AssignDeliveryToPostman (postman.MailInBag[0], postman);
-            postman.MailInBag.RemoveAt (0);
-
-            // } else {
-
-            //     postman.MailToBePickedUp = postman.AssignedTerminal.GetMailToPickUp (postman);
-
-        }
-
-        Destroy (mail.gameObject);
-    }
-
-    public void HandleMailNotInTime (Mail mail, Postman postman) {
-        if (postman) {
-            postman.MailToDeliver = null;
-            postman.MailToPickUp = null;
-            postman.StartCoroutine ("WaitForAssignment");
-        }
-        RemovePickupAssignment (mail, postman);
-
-        Debug.Log ("GAME OVER");
-        Destroy (mail.gameObject);
-    }
-
-    public void HandleMailSpawn (Household house) {
-        Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
-        // MailToBePickedUp[house.AssignedPostman].Add (mail);
-        mail.SenderArea = Area;
-        Household recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
-        while (recipientHouse.Inhabitants == 0) {
-            recipientHouse = Households.ElementAt (UnityEngine.Random.Range (0, Households.Count));
-        }
-        mail.Sender = house;
-        house.MailToSend.Add (mail);
-        mail.Recipient = recipientHouse;
-        mail.OnMailNotDeliveredInTime += HandleMailNotInTime;
-        mail.transform.position = house.transform.position + new Vector3 (UnityEngine.Random.Range (-0.02f, 0.02f), UnityEngine.Random.Range (-0.02f, 0.02f), 0);
-    }
-
     public List<Mail> GetMailToDeliver (Postman postman) {
         List<Mail> mailList = new List<Mail> ();
 
@@ -184,37 +118,6 @@ public class Terminal : MonoBehaviour, IMouseInteractable {
         }
         MailInTerminal.RemoveAll (mail => mailList.Contains (mail));
         return mailList;
-    }
-
-    public List<Mail> GetMailToPickUp (Postman postman) {
-        List<Mail> mail = new List<Mail> ();
-
-        foreach (var house in postman.AssignedHouses) {
-
-            mail.AddRange (house.MailToSend);
-            house.MailToSend.Clear ();
-        }
-
-        return mail;
-    }
-    void AssignPickupToPostman (Mail mail, Postman postman) {
-        if (MailToBePickedUp[postman].Contains (mail)) {
-            MailToBePickedUp[postman].Remove (mail);
-        }
-        postman.MailToPickUp = mail;
-        mail.AssignedPostman = postman;
-        postman.Movement.SetDestination (mail.transform.position);
-    }
-    void AssignDeliveryToPostman (Mail mail, Postman postman) {
-        postman.Movement.SetDestination (mail.Recipient.transform.position);
-        postman.MailToDeliver = mail;
-        postman.MailToPickUp = null;
-        mail.PickedUp = true;
-    }
-    public void RemovePickupAssignment (Mail mail, Postman postman) {
-        if (MailToBePickedUp[postman].Contains (mail)) {
-            MailToBePickedUp[postman].Remove (mail);
-        }
     }
 
 }

@@ -22,9 +22,13 @@ public abstract class ObjectPool<T> : MonoBehaviour where T : Component {
 
     }
 
-    void AddObjects (int count) {
-        var newObject = GameObject.Instantiate (prefab);
-        newObject.gameObject.SetActive (false);
-        objects.Enqueue (newObject);
+    public void AddObjects (int count) {
+        for (int i = 0; i < count; i++) {
+            var newObject = GameObject.Instantiate (prefab);
+            newObject.transform.position = Vector3.zero;
+            newObject.transform.SetParent (transform);
+            newObject.gameObject.SetActive (false);
+            objects.Enqueue (newObject);
+        }
     }
 }

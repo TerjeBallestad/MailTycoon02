@@ -107,6 +107,7 @@ public class PostalArea : MonoBehaviour {
 
     void SpawnTerminal (Household household, int index) {
         Terminal terminal = Instantiate (GameManager.instance.postOfficePrefab, household.transform.position, Quaternion.identity).GetComponent<Terminal> ();
+        GameManager.instance.AllTerminals.Add (terminal);
         terminal.gameObject.name = "Terminal " + index;
         terminal.HouseholdAtLot = household;
         household.gameObject.SetActive (false);
@@ -218,21 +219,6 @@ public class PostalArea : MonoBehaviour {
 
         Debug.Log ("GAME OVER");
         Destroy (mail.gameObject);
-    }
-
-    void HandleMailSpawn (Household house) {
-
-        Mail mail = Instantiate (GameManager.instance.mailPrefab).GetComponent<Mail> ();
-        mailToBePickedUp.Add (mail);
-        mail.SenderArea = this;
-        house.MailToSend.Add (mail);
-        Household recipientHouse = Households.ElementAt (Random.Range (0, Households.Count));
-        while (recipientHouse.Inhabitants == 0) {
-            recipientHouse = Households.ElementAt (Random.Range (0, Households.Count));
-        }
-        mail.Recipient = recipientHouse;
-        mail.OnMailNotDeliveredInTime += HandleMailNotInTime;
-        mail.transform.position = house.transform.position + new Vector3 (Random.Range (-0.02f, 0.02f), Random.Range (-0.02f, 0.02f), 0);
     }
 
     public void GetNextPickupAssignment (Postman postman) {

@@ -5,19 +5,22 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour {
-    public GameObject mailPrefab, postmanPrefab, householdPrefab, postOfficePrefab, mapIndicatorPrefab, linehaulPrefab;
+    public GameObject postmanPrefab, householdPrefab, postOfficePrefab, mapIndicatorPrefab, linehaulPrefab;
     [HideInInspector] public static GameManager instance;
     [HideInInspector] public PostalArea selectedArea;
     [HideInInspector] public IMouseInteractable mouseInteractable;
     [HideInInspector] public event Action ShowAdjustmentLayer, DontShowAdjustmentLayer;
     [HideInInspector] public MapIndicator MovingIdicator;
+    [HideInInspector] public MapIndicatorPool MapIndicatorPool;
+    [HideInInspector] public MailPool MailPool;
+    public List<Terminal> AllTerminals;
     public List<Color> MediumColors, LightColors;
-    public MailPool MailPool;
 
     private void Awake () {
         instance = this;
-        MailPool = gameObject.AddComponent<MailPool> ();
-        MailPool.prefab = mailPrefab.GetComponent<Mail> ();
+        MailPool = GetComponent<MailPool> ();
+        MapIndicatorPool = GetComponent<MapIndicatorPool> ();
+        MapIndicatorPool.AddObjects (20);
     }
     private void Start () {
 
