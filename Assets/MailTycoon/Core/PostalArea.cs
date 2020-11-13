@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PostalArea : MonoBehaviour {
 
+    public Material OutlineMaterial;
     [SerializeField] int gridWidth = 20;
     [SerializeField] int gridHeight = 20;
     [SerializeField] Sprite household1, household2, household3;
@@ -265,6 +266,25 @@ public class PostalArea : MonoBehaviour {
         foreach (var terminal in terminals) {
             terminal.DontShowPostalRouteVisual ();
         }
+    }
+
+    [ContextMenu ("Generate outlines")]
+    public void AddOutline () {
+
+        Mesh m = GetComponent<MeshFilter> ().sharedMesh;
+
+        Mesh r = MeshProcessor.processForOutlineMesh (m);
+
+        GameObject f = new GameObject ();
+        f.transform.position = transform.position;
+        f.transform.rotation = transform.rotation;
+        f.transform.localScale = transform.localScale;
+        f.name = gameObject.name + " processed outline";
+
+        f.AddComponent<MeshFilter> ().sharedMesh = r;
+        f.AddComponent<MeshRenderer> ().sharedMaterial = OutlineMaterial;
+        f.GetComponent<MeshRenderer> ().sharedMaterial.SetFloat ("_Width", 0.01f / transform.localScale.x);
+        f.transform.SetParent (transform);
     }
 
 }

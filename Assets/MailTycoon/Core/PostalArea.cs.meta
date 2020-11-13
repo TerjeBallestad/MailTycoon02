@@ -4,14 +4,10 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
+  - OutlineMaterial: {fileID: 2100000, guid: 550d093938367cc4f9a4a04b004a8453, type: 2}
   - household1: {fileID: 21300000, guid: 7db943bcabae34da9b25c35dac00be42, type: 3}
   - household2: {fileID: 21300000, guid: 6c833fbd0a31c4d08a4b2375aca1f744, type: 3}
   - household3: {fileID: 21300000, guid: 97cce04ceab2a4e84a78274f3778d963, type: 3}
-  - mailPrefab: {fileID: 8270265443303129430, guid: 9e787f959edd14ed0a0289c2425b6eff, type: 3}
-  - postmanPrefab: {fileID: 5325929731948649049, guid: e1d5891bdf6ae40a99565c89b40bf455, type: 3}
-  - householdPrefab: {fileID: 5702111158918382175, guid: fb5d101ebb4b948938f5dae7dec453af, type: 3}
-  - postOfficePrefab: {fileID: 1999276806560190157, guid: 83da2260b6c5d4cde917a8c72253d3c4, type: 3}
-  - mapIndicatorPrefab: {fileID: 8129791473715810720, guid: f59175ba6ac004827a9e88d2aa59ad54, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
