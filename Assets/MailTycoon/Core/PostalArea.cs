@@ -22,7 +22,7 @@ public class PostalArea : MonoBehaviour {
         mailToBePickedUp = new List<Mail> ();
         postmen = new List<Postman> ();
         collider = GetComponent<Collider> ();
-        GameManager.instance.selectedArea = this;
+        GameManager.instance.AllAreas.Add (this);
 
         SpawnHouseholds ();
         for (int i = 0; i < 3; i++) {

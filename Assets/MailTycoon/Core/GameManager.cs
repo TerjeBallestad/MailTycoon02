@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public MapIndicatorPool MapIndicatorPool;
     [HideInInspector] public MailPool MailPool;
     public List<Terminal> AllTerminals;
+    public List<PostalArea> AllAreas;
     public List<Color> MediumColors, LightColors;
 
     private void Awake () {
